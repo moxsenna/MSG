@@ -1,0 +1,6 @@
+{
+  "source_version": "v1",
+  "title": "Multi Email Shop",
+  "emails": ["a@b.com", "c@d.com", "e@f.com"],
+  "website": "https://example.com"
+}

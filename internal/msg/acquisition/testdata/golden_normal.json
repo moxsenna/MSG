@@ -1,0 +1,22 @@
+{
+  "source_version": "v1",
+  "link": "https://www.google.com/maps/place/Test+Coffee/@-6.2,106.8",
+  "cid": "12345",
+  "place_id": "ChIJ123",
+  "data_id": "0x123:0x456",
+  "title": "Test Coffee",
+  "categories": ["Coffee shop", "Cafe"],
+  "category": "Coffee shop",
+  "address": "Jl Test 1",
+  "complete_address": {"city": "Jakarta", "country": "Indonesia"},
+  "website": "https://testcoffee.com",
+  "phone": "+621234567",
+  "emails": ["a@b.com"],
+  "review_count": 120,
+  "review_rating": 4.5,
+  "status": "OPEN",
+  "latitude": -6.2,
+  "longitude": 106.8,
+  "price_range": "$$",
+  "description": "Best coffee"
+}
