@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -234,10 +237,12 @@ func (m *ScraperManager) createApp(provider *Provider) (*scrapemateapp.Scrapemat
 		scrapemateapp.WithProvider(provider),
 	)
 
-	// Add proxy support if proxies are configured
 	if len(m.proxies) > 0 {
-		opts = append(opts, scrapemateapp.WithProxies(m.proxies))
-		log.Info("proxies configured", "count", len(m.proxies))
+		checked := m.checkProxies()
+		if len(checked) > 0 {
+			opts = append(opts, scrapemateapp.WithProxies(checked))
+			log.Info("proxies configured", "count", len(checked), "original", len(m.proxies))
+		}
 	}
 
 	if m.fastMode {
@@ -259,4 +264,75 @@ func (m *ScraperManager) createApp(provider *Provider) (*scrapemateapp.Scrapemat
 	}
 
 	return scrapemateapp.NewScrapeMateApp(cfg)
+}
+
+func (m *ScraperManager) checkProxies() []string {
+	if len(m.proxies) == 0 {
+		return nil
+	}
+
+	healthy := make([]string, 0, len(m.proxies))
+	for _, p := range m.proxies {
+		trimmed := strings.TrimSpace(p)
+		if trimmed == "" {
+			continue
+		}
+
+		parsed, err := url.Parse(trimmed)
+		if err != nil {
+			log.Error("proxy invalid URL, blacklisted", "proxy", trimmed, "error", err)
+			continue
+		}
+
+		switch strings.ToLower(parsed.Scheme) {
+		case "socks5", "socks5h":
+			healthy = append(healthy, trimmed)
+			continue
+		case "http", "https":
+		default:
+			log.Error("proxy unsupported scheme, blacklisted", "proxy", trimmed, "scheme", parsed.Scheme)
+			continue
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		err = probeProxy(ctx, trimmed)
+		cancel()
+		if err != nil {
+			log.Error("proxy health check failed, blacklisted", "proxy", trimmed, "error", err)
+			continue
+		}
+
+		healthy = append(healthy, trimmed)
+	}
+
+	return healthy
+}
+
+func probeProxy(ctx context.Context, proxyURL string) error {
+	parsed, err := url.Parse(proxyURL)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{Proxy: http.ProxyURL(parsed)},
+		Timeout:   5 * time.Second,
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, "https://www.google.com/generate_204", http.NoBody)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 500 {
+		return fmt.Errorf("unexpected status %d", resp.StatusCode)
+	}
+
+	return nil
 }

@@ -219,15 +219,16 @@ func (r *fileRunner) setWriters() error {
 
 func (r *fileRunner) setApp() error {
 	opts := []func(*scrapemateapp.Config) error{
-		// scrapemateapp.WithCache("leveldb", "cache"),
 		scrapemateapp.WithConcurrency(r.cfg.Concurrency),
 		scrapemateapp.WithExitOnInactivity(r.cfg.ExitOnInactivityDuration),
 	}
 
 	if len(r.cfg.Proxies) > 0 {
-		opts = append(opts,
-			scrapemateapp.WithProxies(r.cfg.Proxies),
-		)
+		checked := runner.CheckProxies(context.Background(), r.cfg.Proxies)
+		r.cfg.Proxies = checked
+		if len(checked) > 0 {
+			opts = append(opts, scrapemateapp.WithProxies(checked))
+		}
 	}
 
 	if !r.cfg.FastMode {

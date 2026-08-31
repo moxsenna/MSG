@@ -427,6 +427,16 @@ func EntryFromJSON(raw []byte, reviewCountOnly ...bool) (entry Entry, err error)
 	entry.DataID = getNthElementAndCast[string](darray, 10)
 	entry.PlaceID = getNthElementAndCast[string](darray, 78)
 
+	if entry.Title == "" {
+		log.Printf("WARN: EntryFromJSON missing Title (darray len=%d, jd len=%d) — possible Google layout change at darray[11]", len(darray), len(jd))
+	}
+	if entry.Cid == "" {
+		log.Printf("WARN: EntryFromJSON missing Cid title=%q (jd[25][3][0][13][0][0][1] empty)", entry.Title)
+	}
+	if entry.Latitude == 0 && entry.Longtitude == 0 {
+		log.Printf("WARN: EntryFromJSON missing coordinates title=%q (darray[9][2]/[9][3] empty)", entry.Title)
+	}
+
 	items := getLinkSource(getLinkSourceParams{
 		arr:    getNthElementAndCast[[]any](darray, 171, 0),
 		link:   []int{3, 0, 6, 0},

@@ -34,13 +34,12 @@ type SaveFunc func(ctx context.Context, riverJobID int64, keyword string, entrie
 
 var _ scrapemate.ResultWriter = (*CentralWriter)(nil)
 
-// CentralWriter tracks exactly one in-flight River job, receives ScrapeMate
+// CentralWriter tracks in-flight River jobs, receives ScrapeMate
 // results, and flushes them to the database when the exit monitor signals done.
 type CentralWriter struct {
-	mu      sync.Mutex
-	current *trackedJob
-
-	save           SaveFunc
+	mu     sync.Mutex
+	jobs   map[string]*trackedJob
+	save   SaveFunc
 	OnResultsSaved func(count int)
 }
 
@@ -51,17 +50,21 @@ func NewCentralWriter(db *pgxpool.Pool, saveFn SaveFunc) *CentralWriter {
 		saveFn = pgSave(db)
 	}
 
-	return &CentralWriter{save: saveFn}
+	return &CentralWriter{
+		jobs: make(map[string]*trackedJob),
+		save: saveFn,
+	}
 }
 
-// RegisterJob registers the active River job and returns a completion channel
-// that receives the flush result.
 func (cw *CentralWriter) RegisterJob(jobID string, riverJobID int64, keyword string) <-chan FlushResult {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 
 	ch := make(chan FlushResult, 1)
-	cw.current = &trackedJob{
+	if cw.jobs == nil {
+		cw.jobs = make(map[string]*trackedJob)
+	}
+	cw.jobs[jobID] = &trackedJob{
 		jobID:      jobID,
 		completion: ch,
 		riverJobID: riverJobID,
@@ -74,16 +77,16 @@ func (cw *CentralWriter) RegisterJob(jobID string, riverJobID int64, keyword str
 	return ch
 }
 
-// AddResult appends an entry for the currently tracked job.
 func (cw *CentralWriter) AddResult(jobID string, entry *gmaps.Entry) {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 
-	if cw.current == nil || cw.current.jobID != jobID {
+	j, ok := cw.jobs[jobID]
+	if !ok {
 		return
 	}
 
-	cw.current.entries = append(cw.current.entries, entry)
+	j.entries = append(j.entries, entry)
 }
 
 // MarkDone is called by the exit monitor when a job is complete.
@@ -96,45 +99,33 @@ func (cw *CentralWriter) ForceFlush(jobID string) {
 	cw.Flush(jobID)
 }
 
-// Discard drops the tracked job without persisting results.
 func (cw *CentralWriter) Discard(jobID string) {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 
-	if cw.current != nil && cw.current.jobID == jobID {
-		cw.current = nil
-	}
+	delete(cw.jobs, jobID)
 }
 
-// TrackedJobs returns how many jobs are currently tracked in-memory.
 func (cw *CentralWriter) TrackedJobs() int {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 
-	if cw.current == nil {
-		return 0
-	}
-
-	return 1
+	return len(cw.jobs)
 }
 
-// FlushQueueDepth is kept for health endpoint compatibility.
 func (cw *CentralWriter) FlushQueueDepth() int {
 	return 0
 }
 
-// Flush saves results to DB, signals completion, and clears tracked state.
-// Idempotent: a second call for the same jobID is a no-op.
 func (cw *CentralWriter) Flush(jobID string) {
 	cw.mu.Lock()
-	j := cw.current
-
-	if j == nil || j.jobID != jobID {
+	j, ok := cw.jobs[jobID]
+	if !ok {
 		cw.mu.Unlock()
 		return
 	}
 
-	cw.current = nil
+	delete(cw.jobs, jobID)
 	cw.mu.Unlock()
 
 	for _, entry := range j.entries {

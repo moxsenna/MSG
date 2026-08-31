@@ -27,18 +27,20 @@ type PlaceJob struct {
 func NewPlaceJob(parentID, langCode, u string, extractEmail, extraExtraReviews bool, opts ...PlaceJobOptions) *PlaceJob {
 	const (
 		defaultPrio       = scrapemate.PriorityMedium
-		defaultMaxRetries = 3
+		defaultMaxRetries = 5
+		defaultMaxDelay   = 10 * time.Second
 	)
 
 	job := PlaceJob{
 		Job: scrapemate.Job{
-			ID:         uuid.New().String(),
-			ParentID:   parentID,
-			Method:     "GET",
-			URL:        u,
-			URLParams:  map[string]string{"hl": langCode},
-			MaxRetries: defaultMaxRetries,
-			Priority:   defaultPrio,
+			ID:            uuid.New().String(),
+			ParentID:      parentID,
+			Method:        "GET",
+			URL:           u,
+			URLParams:     map[string]string{"hl": langCode},
+			MaxRetries:    defaultMaxRetries,
+			MaxRetryDelay: defaultMaxDelay,
+			Priority:      defaultPrio,
 		},
 	}
 

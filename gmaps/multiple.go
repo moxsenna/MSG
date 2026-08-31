@@ -3,6 +3,7 @@ package gmaps
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	olc "github.com/google/open-location-code/go"
@@ -73,6 +74,13 @@ func ParseSearchResults(raw []byte) ([]*Entry, error) {
 		entry.DataID = getNthElementAndCast[string](business, 10)
 
 		entry.PlusCode = olc.Encode(entry.Latitude, entry.Longtitude, 10)
+
+		if entry.Title == "" {
+			log.Printf("WARN: ParseSearchResults missing Title at item %d (business len=%d)", i, len(business))
+		}
+		if entry.Latitude == 0 && entry.Longtitude == 0 {
+			log.Printf("WARN: ParseSearchResults missing coordinates title=%q at item %d", entry.Title, i)
+		}
 
 		entries = append(entries, &entry)
 	}

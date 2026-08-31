@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gosom/google-maps-scraper/exiter"
@@ -39,18 +40,20 @@ type SearchJob struct {
 func NewSearchJob(params *MapSearchParams, opts ...SearchJobOptions) *SearchJob {
 	const (
 		defaultPrio       = scrapemate.PriorityMedium
-		defaultMaxRetries = 3
+		defaultMaxRetries = 5
+		defaultMaxDelay   = 10 * time.Second
 		baseURL           = "https://maps.google.com/search"
 	)
 
 	job := SearchJob{
 		Job: scrapemate.Job{
-			ID:         uuid.New().String(),
-			Method:     http.MethodGet,
-			URL:        baseURL,
-			URLParams:  buildGoogleMapsParams(params),
-			MaxRetries: defaultMaxRetries,
-			Priority:   defaultPrio,
+			ID:            uuid.New().String(),
+			Method:        http.MethodGet,
+			URL:           baseURL,
+			URLParams:     buildGoogleMapsParams(params),
+			MaxRetries:    defaultMaxRetries,
+			MaxRetryDelay: defaultMaxDelay,
+			Priority:      defaultPrio,
 		},
 	}
 

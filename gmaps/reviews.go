@@ -266,16 +266,37 @@ func (f *fetcher) fetchReviewPage(ctx context.Context, u string) ([]byte, error)
 		URL:    u,
 	}
 
-	resp := f.httpClient.Fetch(ctx, &job)
-	if resp.Error != nil {
-		return nil, fmt.Errorf("fetch error for %s: %w", u, resp.Error)
+	var lastErr error
+	for attempt := 1; attempt <= 5; attempt++ {
+		resp := f.httpClient.Fetch(ctx, &job)
+		if resp.Error != nil {
+			lastErr = fmt.Errorf("fetch error for %s: %w", u, resp.Error)
+		} else if resp.StatusCode == 429 || resp.StatusCode >= 500 {
+			delay := RetryDelay(attempt, resp.Headers)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+			}
+			lastErr = fmt.Errorf("%s: status %d (retry %d/5 after %s)", u, resp.StatusCode, attempt, delay)
+			continue
+		} else if resp.StatusCode != 200 {
+			return nil, fmt.Errorf("%s: unexpected status code: %d", u, resp.StatusCode)
+		} else {
+			return resp.Body, nil
+		}
+
+		if attempt < 5 {
+			delay := RetryDelay(attempt, nil)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+			}
+		}
 	}
 
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s: unexpected status code: %d", u, resp.StatusCode)
-	}
-
-	return resp.Body, nil
+	return nil, lastErr
 }
 
 func extractNextPageToken(data []byte) string {

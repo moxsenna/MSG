@@ -54,8 +54,9 @@ func NewGmapJob(
 	}
 
 	const (
-		maxRetries = 3
-		prio       = scrapemate.PriorityLow
+		maxRetries    = 5
+		prio          = scrapemate.PriorityLow
+		maxRetryDelay = 10 * time.Second
 	)
 
 	if id == "" {
@@ -64,12 +65,13 @@ func NewGmapJob(
 
 	job := GmapJob{
 		Job: scrapemate.Job{
-			ID:         id,
-			Method:     http.MethodGet,
-			URL:        mapURL,
-			URLParams:  map[string]string{"hl": langCode},
-			MaxRetries: maxRetries,
-			Priority:   prio,
+			ID:            id,
+			Method:        http.MethodGet,
+			URL:           mapURL,
+			URLParams:     map[string]string{"hl": langCode},
+			MaxRetries:    maxRetries,
+			MaxRetryDelay: maxRetryDelay,
+			Priority:      prio,
 		},
 		MaxDepth:     maxDepth,
 		LangCode:     langCode,
