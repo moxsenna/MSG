@@ -1,0 +1,9 @@
+{
+  "name": "@localbiz-ai/ai",
+  "version": "1.0.0",
+  "description": "AI module for summarizing leads",
+  "main": "ai-summary.js",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}

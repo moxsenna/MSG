@@ -6,3 +6,18 @@ examples/examples-api/map-outputs
 examples/examples-api/**/__pycache__/
 examples/examples-api/**/*.py[cod]
 gmaps-output
+
+# MSG hybrid - Node / LocalBiz
+node_modules/
+.pnpm-store/
+dist/
+.next/
+output/*
+!output/.gitkeep
+logs/*
+!logs/.gitkeep
+screenshots/*.png
+screenshots/*.jpg
+screenshots/*.jpeg
+.env
+.env.local

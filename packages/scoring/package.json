@@ -1,0 +1,6 @@
+{
+  "name": "@localbiz-ai/scoring",
+  "version": "1.0.0",
+  "description": "Lead scoring module",
+  "main": "lead-score.js"
+}

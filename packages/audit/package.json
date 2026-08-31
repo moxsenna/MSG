@@ -1,0 +1,9 @@
+{
+  "name": "@localbiz-ai/audit",
+  "version": "1.0.0",
+  "description": "Website audit module",
+  "main": "website-audit.js",
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

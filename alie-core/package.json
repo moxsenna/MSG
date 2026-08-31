@@ -1,0 +1,27 @@
+{
+  "name": "alie-core",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.3",
+    "prettier": "^3.0.0",
+    "prisma": "^6.19.3",
+    "turbo": "latest",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "bullmq": "^5.79.2",
+    "csv-parser": "^3.2.1",
+    "ioredis": "^5.11.1"
+  }
+}
