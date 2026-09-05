@@ -37,6 +37,7 @@ type RawPlaceV1 struct {
 	Website string   `json:"website"`
 	Phone   string   `json:"phone"`
 	Emails  []string `json:"emails"`
+	Socials []string `json:"socials,omitempty"`
 
 	ReviewCount  int     `json:"review_count"`
 	ReviewRating float64 `json:"review_rating"`

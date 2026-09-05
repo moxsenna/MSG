@@ -21,3 +21,13 @@ screenshots/*.jpg
 screenshots/*.jpeg
 .env
 .env.local
+
+# MSG Desktop build outputs (binaries ship via GitHub Releases, not git)
+build/bin/
+build/out/
+build/*.log
+# Agent working files (local ledgers, journals, orchestration state)
+/.unlazy/
+.omo/
+.debug-journal.md
+/GATES.md

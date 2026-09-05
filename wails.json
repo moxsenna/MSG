@@ -1,0 +1,11 @@
+{
+  "name": "MSG Desktop",
+  "outputfilename": "MSGDesktop",
+  "main": "./cmd/msgdesktop/main.go",
+  "frontend:dir": "./desktop/frontend",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "author": { "name": "moxsenna", "email": "moxsenna@gmail.com" },
+  "info": { "companyName": "MSG", "productName": "MSG Desktop", "version": "0.1.0", "description": "Local-first Windows prospecting for local businesses", "copyright": "MSG" }
+}
