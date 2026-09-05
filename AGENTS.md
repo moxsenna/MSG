@@ -1,5 +1,10 @@
 # Development Guide for Agents
 
+> **MSG DESKTOP — baca dulu: `docs/MSG_DESKTOP_AGENT_GUIDE.md`.**
+> Repo ini hybrid: upstream scraper (jangan ubah sembarang) + produk MSG Desktop.
+> Ringkasnya: build/rilis HANYA via `scripts/publish-release.ps1`, jangan `wails build`,
+> output di `build/out/`, jangan sentuh file bernama `MSGDesktop.exe` di `build/bin/` (diblokir AV).
+
 ## Build/Test Commands
 - `make test` - Run all unit tests with race detection
 - `make test-cover` - Run tests with coverage statistics  
